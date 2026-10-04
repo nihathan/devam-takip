@@ -10,8 +10,8 @@ if backend_dir not in sys.path:
 
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print(" 🚀 DEVAM TAKİP SİSTEMİ BAŞLATILIYOR...")
-    print(" 🌐 Web Paneli: http://localhost:8000")
-    print(" 📑 Swagger API Dokümantasyonu: http://localhost:8000/docs")
+    print(" [DEVAM TAKIP] SISTEM BASLATILIYOR...")
+    print(" [*] Web Paneli: http://localhost:8000")
+    print(" [*] Swagger API Dokumantasyonu: http://localhost:8000/docs")
     print("="*60 + "\n")
     uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
