@@ -103,6 +103,34 @@ def create_student(payload: StudentCreate, db: Session = Depends(get_db)):
         created_at=student.created_at
     )
 
+# --- Silme İşlemleri (Yönetim Paneli) ---
+@router.delete("/classes/{class_id}")
+def delete_class(class_id: int, db: Session = Depends(get_db)):
+    c = db.query(ClassRoom).filter(ClassRoom.id == class_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Sınıf bulunamadı.")
+    db.delete(c)
+    db.commit()
+    return {"success": True, "message": f"'{c.name}' sınıfı silindi."}
+
+@router.delete("/subjects/{subject_id}")
+def delete_subject(subject_id: int, db: Session = Depends(get_db)):
+    s = db.query(Subject).filter(Subject.id == subject_id).first()
+    if not s:
+        raise HTTPException(status_code=404, detail="Ders bulunamadı.")
+    db.delete(s)
+    db.commit()
+    return {"success": True, "message": f"'{s.name}' dersi silindi."}
+
+@router.delete("/students/{student_id}")
+def delete_student(student_id: int, db: Session = Depends(get_db)):
+    st = db.query(Student).filter(Student.id == student_id).first()
+    if not st:
+        raise HTTPException(status_code=404, detail="Öğrenci bulunamadı.")
+    st.is_active = False # Soft delete
+    db.commit()
+    return {"success": True, "message": f"'{st.full_name}' öğrencisi silindi/arşivlendi."}
+
 # --- Rehberlik Müdahale Notları ---
 @router.post("/interventions", response_model=InterventionResponse)
 def add_intervention(payload: InterventionCreate, db: Session = Depends(get_db)):

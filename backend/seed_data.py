@@ -1,15 +1,23 @@
 import random
 from datetime import date, timedelta
 from app.database import SessionLocal, engine, Base
-from app.models import ClassRoom, Subject, Student, LessonSession, AttendanceRecord, AttendanceStatus, SMSAlertLog
+from app.models import ClassRoom, Subject, Student, LessonSession, AttendanceRecord, AttendanceStatus, SMSAlertLog, User, UserRole
+from app.services.auth_service import create_user
 
 def seed():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
-    # Eğer zaten veri varsa tekrar ekleme
+    # Kullanıcılar (İdareci ve Öğretmen) kontrolü ve oluşturulması
+    if db.query(User).count() == 0:
+        print("[AUTH] Yonetici ve ogretmen kullanicilari olusturuluyor...")
+        create_user(db, username="admin", password="admin123", full_name="Okul Muduru / Idare", role=UserRole.ADMIN)
+        create_user(db, username="ogretmen", password="ogretmen123", full_name="Ahmet Ogretmen", role=UserRole.TEACHER)
+        print("[AUTH] 'admin' (sifre: admin123) ve 'ogretmen' (sifre: ogretmen123) hazir.")
+
+    # Eğer zaten öğrenci verisi varsa tekrar ekleme
     if db.query(Student).count() > 0:
-        print("[INFO] Veritabaninda zaten kayit mevcut. Seed adimi atlandi.")
+        print("[INFO] Veritabaninda zaten ogrenci kayitlari mevcut. Seed adimi tamamlandi.")
         db.close()
         return
 

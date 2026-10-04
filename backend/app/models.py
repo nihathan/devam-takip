@@ -16,6 +16,23 @@ class RiskLevel(str, enum.Enum):
     HIGH = "HIGH"             # Yüksek Risk (Turuncu)
     CRITICAL = "CRITICAL"     # Kritik Risk (Kırmızı)
 
+class UserRole(str, enum.Enum):
+    ADMIN = "ADMIN"           # Okul İdarecisi
+    TEACHER = "TEACHER"       # Öğretmen
+    COUNSELOR = "COUNSELOR"   # Rehberlik / Danışman
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    full_name = Column(String(100), nullable=False)
+    role = Column(Enum(UserRole), default=UserRole.ADMIN, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    salt = Column(String(64), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class ClassRoom(Base):
     __tablename__ = "classrooms"
 

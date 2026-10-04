@@ -20,6 +20,13 @@ Sistem; son haftalardaki ani devamsızlık artışlarını, Pazartesi/Cuma günl
 
 ## ✨ Temel Özellikler
 
+- 🔒 **Şifreli Giriş & Rol Tabanlı Yetkilendirme (Auth):**
+  - İdareci (`ADMIN`) ve Öğretmen (`TEACHER`) kullanıcı hesapları.
+  - Güvenli PBKDF2-HMAC-SHA256 parola hashleme ve oturum yönetimi.
+- 🏫 **İdareci Yönetim Paneli (Admin Module):**
+  - **Sınıf Yönetimi:** Yeni şube/sınıf açma, seviye belirleme ve silme.
+  - **Ders Tanımları:** Müfredat derslerini ve kodlarını ekleme/silme.
+  - **Öğrenci Kütük Kaydı:** Öğrenci numarası, sınıfı ve veli iletişim bilgileriyle yeni öğrenci kaydetme, arama ve yönetme.
 - 📊 **Oturum & Ders Bazlı Veri Modeli:** Sadece günlük değil, her ders saati (1. ders, 2. ders...) bazında detaylı yoklama kaydı.
 - ⚡ **Hızlı Yoklama Arayüzü (Öğretmen Dostu):** "Tümünü Geldi Yap" butonu ile öğretmenin sadece gelmeyen veya geç kalan öğrencilere dokunarak 10 saniyede yoklama almasını sağlayan arayüz.
 - 🧠 **Erken Uyarı & Risk Skoru Motoru (0 - 100):**
@@ -111,6 +118,13 @@ python run.py
 Tarayıcınızda açın:
 - 🌐 **Web Paneli:** [http://localhost:8000](http://localhost:8000)
 - 📑 **Swagger API Dokümantasyonu:** [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### 🔑 Varsayılan Giriş Bilgileri
+
+| Rol | Kullanıcı Adı | Şifre | Yetki Kapsamı |
+| :--- | :--- | :--- | :--- |
+| **Okul İdarecisi (Admin)** | `admin` | `admin123` | Sınıf, ders, öğrenci ekleme/silme ve tam yetki |
+| **Öğretmen (Teacher)** | `ogretmen` | `ogretmen123` | Yoklama alma, analiz inceleme ve SMS gönderme |
 
 ---
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Devam Takip | Erken Uyarı & Veli SMS Sistemi</title>
+  <title>Devam Takip | Erken Uyarı, SMS & Yönetim Paneli</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js CDN -->
@@ -18,36 +18,45 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
   <!-- Üst Menü / Navbar -->
-  <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
+  <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
         <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-inner">
           <i data-lucide="shield-alert" class="w-6 h-6"></i>
         </div>
         <div>
           <h1 class="text-xl font-bold tracking-tight">Devam Takip</h1>
-          <p class="text-xs text-indigo-200">Devamsızlık Erken Uyarı & SMS Bildirim Paneli</p>
+          <p class="text-xs text-indigo-200">Erken Uyarı, SMS & İdareci Yönetim Sistemi</p>
         </div>
       </div>
+
       <!-- Tab Butonları -->
-      <nav class="flex space-x-1 sm:space-x-2 bg-indigo-950/60 p-1.5 rounded-xl text-sm font-medium">
-        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all bg-indigo-600 text-white shadow">
-          <i data-lucide="layout-dashboard" class="w-4 h-4 inline mr-1.5"></i>Panel
+      <nav class="flex flex-wrap space-x-1 sm:space-x-1.5 bg-indigo-950/60 p-1.5 rounded-xl text-sm font-medium">
+        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn px-3 py-1.5 rounded-lg transition-all bg-indigo-600 text-white shadow">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 inline mr-1"></i>Panel
         </button>
-        <button onclick="switchTab('risk-panel')" id="btn-risk-panel" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all text-indigo-200 hover:text-white">
-          <i data-lucide="alert-triangle" class="w-4 h-4 inline mr-1.5"></i>Erken Uyarı & Risk
+        <button onclick="switchTab('risk-panel')" id="btn-risk-panel" class="tab-btn px-3 py-1.5 rounded-lg transition-all text-indigo-200 hover:text-white">
+          <i data-lucide="alert-triangle" class="w-4 h-4 inline mr-1"></i>Erken Uyarı & Risk
         </button>
-        <button onclick="switchTab('take-attendance')" id="btn-take-attendance" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all text-indigo-200 hover:text-white">
-          <i data-lucide="check-square" class="w-4 h-4 inline mr-1.5"></i>Hızlı Yoklama
+        <button onclick="switchTab('take-attendance')" id="btn-take-attendance" class="tab-btn px-3 py-1.5 rounded-lg transition-all text-indigo-200 hover:text-white">
+          <i data-lucide="check-square" class="w-4 h-4 inline mr-1"></i>Hızlı Yoklama
         </button>
-        <button onclick="switchTab('sms-logs')" id="btn-sms-logs" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all text-indigo-200 hover:text-white">
-          <i data-lucide="message-square" class="w-4 h-4 inline mr-1.5"></i>SMS Günlüğü
+        <button onclick="switchTab('sms-logs')" id="btn-sms-logs" class="tab-btn px-3 py-1.5 rounded-lg transition-all text-indigo-200 hover:text-white">
+          <i data-lucide="message-square" class="w-4 h-4 inline mr-1"></i>SMS Günlüğü
+        </button>
+        <button onclick="switchTab('admin-panel')" id="btn-admin-panel" class="tab-btn px-3 py-1.5 rounded-lg transition-all text-amber-300 hover:text-white">
+          <i data-lucide="sliders" class="w-4 h-4 inline mr-1"></i>Yönetim Paneli
         </button>
       </nav>
+
+      <!-- Kullanıcı Giriş / Profil Alanı -->
+      <div id="auth-area" class="flex items-center space-x-3">
+        <!-- JS dinamik dolduracak -->
+      </div>
     </div>
   </header>
 
-  <!-- Bildirim Kutusu -->
+  <!-- Bildirim Kutusu (Toast) -->
   <div id="toast" class="fixed bottom-6 right-6 z-50 hidden bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all duration-300">
     <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
     <span id="toast-message" class="text-sm font-medium">İşlem başarıyla tamamlandı.</span>
@@ -284,7 +293,211 @@
       </div>
     </section>
 
+    <!-- ================= TAB 5: İDARECİ YÖNETİM PANELİ (ADMIN) ================= -->
+    <section id="tab-admin-panel" class="tab-content hidden space-y-8">
+      <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <span class="bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">İdareci Modülü</span>
+          <h2 class="text-2xl font-bold mt-1">Okul & Sınıf Yönetim Paneli</h2>
+          <p class="text-sm text-indigo-200">Sınıfları, dersleri ve öğrenci kütük bilgilerini buradan ekleyip düzenleyin.</p>
+        </div>
+        <div id="admin-auth-warning" class="hidden bg-amber-500/20 border border-amber-400/40 px-4 py-2 rounded-xl text-amber-200 text-xs flex items-center">
+          <i data-lucide="lock" class="w-4 h-4 mr-2"></i>Tam yönetim yetkisi için İdareci Girişi yapınız.
+        </div>
+      </div>
+
+      <!-- 3'lü Yönetim Grid'i -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- KART 1: SINIF YÖNETİMİ -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center space-x-2 text-indigo-600">
+            <i data-lucide="school" class="w-5 h-5"></i>
+            <h3 class="text-lg font-bold text-slate-900">Sınıf Yönetimi</h3>
+          </div>
+          <p class="text-xs text-slate-500">Okuldaki şubeleri oluşturun ve takip edin.</p>
+
+          <!-- Yeni Sınıf Ekle Formu -->
+          <form onsubmit="handleCreateClass(event)" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Sınıf / Şube Adı</label>
+              <input type="text" id="admin-class-name" required placeholder="Örn: 10-C veya 12-Fen-A" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Sınıf Seviyesi</label>
+              <select id="admin-class-grade" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="9">9. Sınıf</option>
+                <option value="10">10. Sınıf</option>
+                <option value="11">11. Sınıf</option>
+                <option value="12">12. Sınıf</option>
+                <option value="5">5. Sınıf (Ortaokul)</option>
+                <option value="6">6. Sınıf (Ortaokul)</option>
+                <option value="7">7. Sınıf (Ortaokul)</option>
+                <option value="8">8. Sınıf (Ortaokul)</option>
+              </select>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg text-xs shadow transition flex items-center justify-center">
+              <i data-lucide="plus" class="w-4 h-4 mr-1"></i>Yeni Sınıf Ekle
+            </button>
+          </form>
+
+          <!-- Sınıf Listesi -->
+          <div class="space-y-2 max-h-64 overflow-y-auto" id="admin-classes-list">
+            <!-- JS dolduracak -->
+          </div>
+        </div>
+
+        <!-- KART 2: DERS YÖNETİMİ -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center space-x-2 text-indigo-600">
+            <i data-lucide="book-open" class="w-5 h-5"></i>
+            <h3 class="text-lg font-bold text-slate-900">Ders Tanımları</h3>
+          </div>
+          <p class="text-xs text-slate-500">Müfredatta yer alan dersleri yönetin.</p>
+
+          <!-- Yeni Ders Ekle Formu -->
+          <form onsubmit="handleCreateSubject(event)" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Ders Adı</label>
+              <input type="text" id="admin-subject-name" required placeholder="Örn: Kimya veya Coğrafya" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Ders Kodu (Opsiyonel)</label>
+              <input type="text" id="admin-subject-code" placeholder="Örn: KMY101" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg text-xs shadow transition flex items-center justify-center">
+              <i data-lucide="plus" class="w-4 h-4 mr-1"></i>Yeni Ders Ekle
+            </button>
+          </form>
+
+          <!-- Ders Listesi -->
+          <div class="space-y-2 max-h-64 overflow-y-auto" id="admin-subjects-list">
+            <!-- JS dolduracak -->
+          </div>
+        </div>
+
+        <!-- KART 3: YENİ ÖĞRENCİ KAYDI -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center space-x-2 text-indigo-600">
+            <i data-lucide="user-plus" class="w-5 h-5"></i>
+            <h3 class="text-lg font-bold text-slate-900">Yeni Öğrenci Kaydı</h3>
+          </div>
+          <p class="text-xs text-slate-500">Sisteme ve şubeye yeni bir öğrenci ekleyin.</p>
+
+          <!-- Öğrenci Ekle Formu -->
+          <form onsubmit="handleCreateStudent(event)" class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Öğrenci No</label>
+                <input type="text" id="admin-student-no" required placeholder="Örn: 450" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Sınıfı</label>
+                <select id="admin-student-class" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+                  <!-- JS dolduracak -->
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Adı</label>
+                <input type="text" id="admin-student-fname" required placeholder="Örn: Can" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Soyadı</label>
+                <input type="text" id="admin-student-lname" required placeholder="Örn: Polat" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Veli Adı Soyadı</label>
+              <input type="text" id="admin-student-pname" required placeholder="Örn: Gülhan Polat" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Veli Telefonu (SMS İçin)</label>
+              <input type="text" id="admin-student-pphone" required placeholder="Örn: +905321234567" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg text-xs shadow transition flex items-center justify-center">
+              <i data-lucide="check" class="w-4 h-4 mr-1"></i>Öğrenciyi Sisteme Kaydet
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Kayıtlı Öğrenciler Tablosu (Yönetim & Silme) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div class="flex items-center space-x-2">
+            <h3 class="font-bold text-slate-900 text-sm">Kayıtlı Öğrenci Listesi</h3>
+            <span id="admin-student-count" class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-semibold">0 Öğrenci</span>
+          </div>
+          <!-- Arama Kutusu -->
+          <div class="w-full sm:w-64">
+            <input type="text" id="admin-search-student" onkeyup="filterAdminStudents()" placeholder="Öğrenci veya numara ara..." class="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+        </div>
+        <div class="overflow-x-auto max-h-96">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-100 text-slate-600 uppercase font-semibold sticky top-0">
+              <tr>
+                <th class="py-2.5 px-4">No</th>
+                <th class="py-2.5 px-4">Ad Soyad</th>
+                <th class="py-2.5 px-4">Sınıf</th>
+                <th class="py-2.5 px-4">Veli İletişim</th>
+                <th class="py-2.5 px-4 text-right">İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="admin-student-table-body" class="divide-y divide-slate-100">
+              <!-- JS dolduracak -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- ================= MODAL: KULLANICI GİRİŞİ (LOGIN) ================= -->
+  <div id="login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-2.5">
+          <div class="bg-indigo-100 p-2 rounded-xl text-indigo-600">
+            <i data-lucide="lock" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Sisteme Giriş Yap</h3>
+            <p class="text-xs text-slate-500">İdareci veya Öğretmen Hesabı</p>
+          </div>
+        </div>
+        <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Kullanıcı Adı</label>
+          <input type="text" id="login-username" required placeholder="Örn: admin" value="admin" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Şifre</label>
+          <input type="password" id="login-password" required placeholder="••••••••" value="admin123" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+        </div>
+
+        <!-- Hızlı demo hesapları kutusu -->
+        <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-800 space-y-1">
+          <p class="font-semibold flex items-center"><i data-lucide="info" class="w-3.5 h-3.5 mr-1 text-indigo-600"></i>Demo Giriş Bilgileri:</p>
+          <p>• <strong>İdareci:</strong> <code>admin</code> / Şifre: <code>admin123</code></p>
+          <p>• <strong>Öğretmen:</strong> <code>ogretmen</code> / Şifre: <code>ogretmen123</code></p>
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow transition flex items-center justify-center">
+          <i data-lucide="log-in" class="w-4 h-4 mr-2"></i>Giriş Yap
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- Modal: Tek Öğrenciye SMS Gönder -->
   <div id="sms-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -317,14 +530,20 @@
     let currentTab = 'dashboard';
     let riskDataCache = [];
     let classesCache = [];
+    let subjectsCache = [];
+    let studentsCache = [];
     let currentModalStudentId = null;
     let dayChartInstance = null;
     let hourChartInstance = null;
     let riskPieChartInstance = null;
 
+    // Kullanıcı Oturum Bilgisi
+    let currentUser = null;
+
     // Başlangıç
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("input-date").value = new Date().toISOString().split('T')[0];
+      initAuth();
       lucide.createIcons();
       loadOverview();
       loadHeatmaps();
@@ -338,7 +557,95 @@
       setTimeout(() => toast.classList.add("hidden"), 3500);
     }
 
+    // --- OTURUM & GİRİŞ YÖNETİMİ ---
+    function initAuth() {
+      const stored = localStorage.getItem('devam_user');
+      if (stored) {
+        try {
+          currentUser = JSON.parse(stored);
+        } catch (e) {
+          currentUser = null;
+        }
+      }
+      renderAuthArea();
+    }
+
+    function renderAuthArea() {
+      const authArea = document.getElementById('auth-area');
+      if (currentUser) {
+        const roleBadge = currentUser.role === 'ADMIN' ? 'bg-amber-400 text-indigo-950' : 'bg-indigo-500 text-white';
+        authArea.innerHTML = `
+          <div class="flex items-center space-x-2 bg-indigo-950/80 px-3 py-1.5 rounded-xl border border-indigo-700/50">
+            <span class="text-xs font-semibold">${currentUser.full_name}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${roleBadge}">${currentUser.role}</span>
+            <button onclick="logout()" title="Çıkış Yap" class="text-indigo-300 hover:text-white ml-2 transition">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+        document.getElementById('admin-auth-warning').classList.add('hidden');
+      } else {
+        authArea.innerHTML = `
+          <button onclick="openLoginModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow flex items-center">
+            <i data-lucide="log-in" class="w-3.5 h-3.5 mr-1.5"></i>Giriş Yap
+          </button>
+        `;
+        document.getElementById('admin-auth-warning').classList.remove('hidden');
+      }
+      lucide.createIcons();
+    }
+
+    function openLoginModal() {
+      document.getElementById('login-modal').classList.remove('hidden');
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').classList.add('hidden');
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const u = document.getElementById('login-username').value;
+      const p = document.getElementById('login-password').value;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          currentUser = data.user;
+          localStorage.setItem('devam_user', JSON.stringify(currentUser));
+          closeLoginModal();
+          renderAuthArea();
+          showToast(`Hoş geldiniz, ${currentUser.full_name}!`);
+        } else {
+          alert("Giriş Başarısız: " + (data.detail || "Hatalı şifre"));
+        }
+      } catch (err) {
+        alert("Bağlantı hatası: " + err);
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      localStorage.removeItem('devam_user');
+      renderAuthArea();
+      showToast("Çıkış yapıldı.");
+      if (currentTab === 'admin-panel') {
+        switchTab('dashboard');
+      }
+    }
+
+    // --- TAB GEÇİŞLERİ ---
     function switchTab(tabId) {
+      if (tabId === 'admin-panel' && !currentUser) {
+        openLoginModal();
+        return;
+      }
+
       currentTab = tabId;
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -348,8 +655,10 @@
 
       document.getElementById(`tab-${tabId}`).classList.remove('hidden');
       const activeBtn = document.getElementById(`btn-${tabId}`);
-      activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow');
-      activeBtn.classList.remove('text-indigo-200');
+      if (activeBtn) {
+        activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow');
+        activeBtn.classList.remove('text-indigo-200');
+      }
 
       if (tabId === 'dashboard') {
         loadOverview();
@@ -358,6 +667,8 @@
         loadRiskReport();
       } else if (tabId === 'sms-logs') {
         loadSMSLogs();
+      } else if (tabId === 'admin-panel') {
+        loadAdminData();
       }
       lucide.createIcons();
     }
@@ -558,7 +869,6 @@
       document.getElementById('modal-student-name').innerText = student.student_name;
       document.getElementById('modal-parent-info').innerText = `${student.parent_name} (${student.parent_phone})`;
 
-      // Akıllı şablon oluştur
       let msg = `Sayın Velimiz, ${student.student_name}'in toplam devamsızlığı ${student.absent_count} ders saatine ulaşmıştır.`;
       if (student.recent_absence_count >= 5) {
         msg += ` Özellikle son 2 haftadaki artış dikkat çekmektedir (${student.recent_absence_count} ders).`;
@@ -616,13 +926,19 @@
           fetch('/api/school/subjects')
         ]);
         classesCache = await cRes.json();
-        const subjects = await sRes.json();
+        subjectsCache = await sRes.json();
 
         const classSelect = document.getElementById('select-class');
         classSelect.innerHTML = classesCache.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 
         const subjSelect = document.getElementById('select-subject');
-        subjSelect.innerHTML = subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        subjSelect.innerHTML = subjectsCache.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+        // Admin öğrenci ekleme sınıf seçicisini de güncelle
+        const adminClassSelect = document.getElementById('admin-student-class');
+        if (adminClassSelect) {
+          adminClassSelect.innerHTML = classesCache.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
 
         loadClassStudents();
       } catch (err) {
@@ -757,6 +1073,250 @@
         `).join('');
       } catch (err) {
         console.error("SMS logs error:", err);
+      }
+    }
+
+    // --- İDARECİ YÖNETİM PANELİ (ADMIN) FONKSİYONLARI ---
+    async function loadAdminData() {
+      await Promise.all([
+        loadAdminClasses(),
+        loadAdminSubjects(),
+        loadAdminStudents()
+      ]);
+      lucide.createIcons();
+    }
+
+    async function loadAdminClasses() {
+      const res = await fetch('/api/school/classes');
+      classesCache = await res.json();
+      const list = document.getElementById('admin-classes-list');
+
+      // Admin student select dropdown'ını da güncelle
+      const select = document.getElementById('admin-student-class');
+      if (select) {
+        select.innerHTML = classesCache.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      }
+
+      if (classesCache.length === 0) {
+        list.innerHTML = '<p class="text-xs text-slate-400 py-3 text-center">Kayıtlı sınıf bulunmuyor.</p>';
+        return;
+      }
+
+      list.innerHTML = classesCache.map(c => `
+        <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+          <div>
+            <span class="font-bold text-slate-800 text-xs">${c.name}</span>
+            <span class="text-[11px] text-slate-500 ml-2">(${c.student_count || 0} Öğrenci)</span>
+          </div>
+          <button onclick="handleDeleteClass(${c.id}, '${c.name}')" title="Sınıfı Sil" class="text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-50 transition">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function loadAdminSubjects() {
+      const res = await fetch('/api/school/subjects');
+      subjectsCache = await res.json();
+      const list = document.getElementById('admin-subjects-list');
+
+      if (subjectsCache.length === 0) {
+        list.innerHTML = '<p class="text-xs text-slate-400 py-3 text-center">Kayıtlı ders bulunmuyor.</p>';
+        return;
+      }
+
+      list.innerHTML = subjectsCache.map(s => `
+        <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+          <div>
+            <span class="font-bold text-slate-800 text-xs">${s.name}</span>
+            ${s.code ? `<span class="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded ml-2">${s.code}</span>` : ''}
+          </div>
+          <button onclick="handleDeleteSubject(${s.id}, '${s.name}')" title="Dersi Sil" class="text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-50 transition">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function loadAdminStudents() {
+      const res = await fetch('/api/school/students');
+      studentsCache = await res.json();
+      document.getElementById('admin-student-count').innerText = `${studentsCache.length} Öğrenci`;
+      renderAdminStudentTable(studentsCache);
+    }
+
+    function renderAdminStudentTable(list) {
+      const tbody = document.getElementById('admin-student-table-body');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Kayıtlı öğrenci bulunamadı.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = list.map(s => `
+        <tr class="hover:bg-slate-50/80 transition">
+          <td class="py-2.5 px-4 font-bold text-slate-700 font-mono">${s.student_number}</td>
+          <td class="py-2.5 px-4 font-semibold text-slate-900">${s.full_name}</td>
+          <td class="py-2.5 px-4"><span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded font-medium">${s.classroom_name || '-'}</span></td>
+          <td class="py-2.5 px-4 text-slate-600">${s.parent_name} <span class="text-slate-400">(${s.parent_phone})</span></td>
+          <td class="py-2.5 px-4 text-right">
+            <button onclick="handleDeleteStudent(${s.id}, '${s.full_name}')" title="Öğrenciyi Sil" class="text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-50 transition">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function filterAdminStudents() {
+      const q = document.getElementById('admin-search-student').value.toLowerCase();
+      const filtered = studentsCache.filter(s => 
+        s.full_name.toLowerCase().includes(q) || 
+        s.student_number.includes(q) ||
+        (s.classroom_name && s.classroom_name.toLowerCase().includes(q))
+      );
+      renderAdminStudentTable(filtered);
+    }
+
+    // --- FORM İŞLEMLERİ ---
+    async function handleCreateClass(e) {
+      e.preventDefault();
+      const name = document.getElementById('admin-class-name').value.trim();
+      const grade = parseInt(document.getElementById('admin-class-grade').value);
+
+      try {
+        const res = await fetch('/api/school/classes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, grade_level: grade })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`'${name}' sınıfı başarıyla eklendi!`);
+          document.getElementById('admin-class-name').value = '';
+          loadClassesAndSubjects();
+          loadAdminClasses();
+        } else {
+          alert(data.detail || "Sınıf eklenemedi.");
+        }
+      } catch (err) {
+        alert("Hata: " + err);
+      }
+    }
+
+    async function handleDeleteClass(id, name) {
+      if (!confirm(`'${name}' sınıfını silmek istediğinizden emin misiniz?`)) return;
+      try {
+        const res = await fetch(`/api/school/classes/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast(`'${name}' sınıfı silindi.`);
+          loadClassesAndSubjects();
+          loadAdminClasses();
+          loadOverview();
+        }
+      } catch (err) {
+        alert("Silinemedi: " + err);
+      }
+    }
+
+    async function handleCreateSubject(e) {
+      e.preventDefault();
+      const name = document.getElementById('admin-subject-name').value.trim();
+      const code = document.getElementById('admin-subject-code').value.trim();
+
+      try {
+        const res = await fetch('/api/school/subjects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, code })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`'${name}' dersi eklendi!`);
+          document.getElementById('admin-subject-name').value = '';
+          document.getElementById('admin-subject-code').value = '';
+          loadClassesAndSubjects();
+          loadAdminSubjects();
+        } else {
+          alert(data.detail || "Ders eklenemedi.");
+        }
+      } catch (err) {
+        alert("Hata: " + err);
+      }
+    }
+
+    async function handleDeleteSubject(id, name) {
+      if (!confirm(`'${name}' dersini silmek istediğinizden emin misiniz?`)) return;
+      try {
+        const res = await fetch(`/api/school/subjects/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast(`'${name}' dersi silindi.`);
+          loadClassesAndSubjects();
+          loadAdminSubjects();
+        }
+      } catch (err) {
+        alert("Silinemedi: " + err);
+      }
+    }
+
+    async function handleCreateStudent(e) {
+      e.preventDefault();
+      const sNo = document.getElementById('admin-student-no').value.trim();
+      const cId = parseInt(document.getElementById('admin-student-class').value);
+      const fName = document.getElementById('admin-student-fname').value.trim();
+      const lName = document.getElementById('admin-student-lname').value.trim();
+      const pName = document.getElementById('admin-student-pname').value.trim();
+      const pPhone = document.getElementById('admin-student-pphone').value.trim();
+
+      if (!cId) {
+        alert("Lütfen önce bir sınıf tanımlayın!");
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/school/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_number: sNo,
+            class_id: cId,
+            first_name: fName,
+            last_name: lName,
+            parent_name: pName,
+            parent_phone: pPhone
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`'${fName} ${lName}' sisteme kaydedildi!`);
+          document.getElementById('admin-student-no').value = '';
+          document.getElementById('admin-student-fname').value = '';
+          document.getElementById('admin-student-lname').value = '';
+          document.getElementById('admin-student-pname').value = '';
+          document.getElementById('admin-student-pphone').value = '';
+          loadAdminStudents();
+          loadClassStudents();
+          loadOverview();
+        } else {
+          alert(data.detail || "Öğrenci kaydedilemedi.");
+        }
+      } catch (err) {
+        alert("Hata: " + err);
+      }
+    }
+
+    async function handleDeleteStudent(id, name) {
+      if (!confirm(`'${name}' isimli öğrenciyi sistemden silmek istediğinize emin misiniz?`)) return;
+      try {
+        const res = await fetch(`/api/school/students/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast(`'${name}' kaydı silindi.`);
+          loadAdminStudents();
+          loadClassStudents();
+          loadOverview();
+        }
+      } catch (err) {
+        alert("Hata: " + err);
       }
     }
   </script>

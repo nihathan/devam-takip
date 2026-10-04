@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .database import engine, Base
-from .api import students, attendance, analytics
+from .api import students, attendance, analytics, auth
 
 # Veritabanı tablolarını oluştur
 Base.metadata.create_all(bind=engine)
@@ -26,6 +26,7 @@ app.add_middleware(
 )
 
 # Router'ları ekle
+app.include_router(auth.router)
 app.include_router(students.router)
 app.include_router(attendance.router)
 app.include_router(analytics.router)
