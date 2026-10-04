@@ -1,0 +1,26 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# SQLite Veritabanı
+*.db
+*.sqlite
+*.sqlite3
+
+# Ortam Değişkenleri
+.env
+.env.*
+!.env.example
+
+# IDE ve Editörler
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Loglar
+*.log

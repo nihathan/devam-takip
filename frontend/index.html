@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Devam Takip | Erken Uyarı & Veli SMS Sistemi</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <!-- Üst Menü / Navbar -->
+  <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-inner">
+          <i data-lucide="shield-alert" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">Devam Takip</h1>
+          <p class="text-xs text-indigo-200">Devamsızlık Erken Uyarı & SMS Bildirim Paneli</p>
+        </div>
+      </div>
+      <!-- Tab Butonları -->
+      <nav class="flex space-x-1 sm:space-x-2 bg-indigo-950/60 p-1.5 rounded-xl text-sm font-medium">
+        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all bg-indigo-600 text-white shadow">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 inline mr-1.5"></i>Panel
+        </button>
+        <button onclick="switchTab('risk-panel')" id="btn-risk-panel" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all text-indigo-200 hover:text-white">
+          <i data-lucide="alert-triangle" class="w-4 h-4 inline mr-1.5"></i>Erken Uyarı & Risk
+        </button>
+        <button onclick="switchTab('take-attendance')" id="btn-take-attendance" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all text-indigo-200 hover:text-white">
+          <i data-lucide="check-square" class="w-4 h-4 inline mr-1.5"></i>Hızlı Yoklama
+        </button>
+        <button onclick="switchTab('sms-logs')" id="btn-sms-logs" class="tab-btn px-3.5 py-1.5 rounded-lg transition-all text-indigo-200 hover:text-white">
+          <i data-lucide="message-square" class="w-4 h-4 inline mr-1.5"></i>SMS Günlüğü
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Bildirim Kutusu -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 hidden bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transition-all duration-300">
+    <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+    <span id="toast-message" class="text-sm font-medium">İşlem başarıyla tamamlandı.</span>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ================= TAB 1: GENEL BAKIŞ & ANALİZ ================= -->
+    <section id="tab-dashboard" class="tab-content space-y-8">
+      
+      <!-- KPI Kartları -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Toplam Öğrenci</p>
+            <h3 id="kpi-students" class="text-3xl font-extrabold text-slate-900 mt-1">--</h3>
+            <span class="text-xs text-slate-500" id="kpi-classes">-- sınıf kayıtlı</span>
+          </div>
+          <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="users" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Okul Devam Oranı</p>
+            <h3 id="kpi-attendance-rate" class="text-3xl font-extrabold text-emerald-600 mt-1">--%</h3>
+            <span class="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">Genel Katılım</span>
+          </div>
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="percent" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Kritik Riskli Öğrenci</p>
+            <h3 id="kpi-critical" class="text-3xl font-extrabold text-rose-600 mt-1">--</h3>
+            <span class="text-xs text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full font-medium">Acil Müdahale</span>
+          </div>
+          <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="flame" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">İletilen SMS Uyarıları</p>
+            <h3 id="kpi-sms" class="text-3xl font-extrabold text-indigo-600 mt-1">--</h3>
+            <span class="text-xs text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full font-medium">Veli Bildirimi</span>
+          </div>
+          <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+            <i data-lucide="send" class="w-6 h-6"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grafikler Satırı -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Günlük Dağılım Grafiği -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-1 flex items-center">
+            <i data-lucide="calendar" class="w-4 h-4 mr-2 text-indigo-600"></i>Haftanın Günlerine Göre Kaçış
+          </h3>
+          <p class="text-xs text-slate-500 mb-4">Pazartesi & Cuma devamsızlık kümelenmesi</p>
+          <div class="relative h-60">
+            <canvas id="dayChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Ders Saatlerine Göre Grafiği -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-1 flex items-center">
+            <i data-lucide="clock" class="w-4 h-4 mr-2 text-indigo-600"></i>Ders Saatlerine Göre Devamsızlık
+          </h3>
+          <p class="text-xs text-slate-500 mb-4">1. ders geç kalmaları ve son ders kaçışları</p>
+          <div class="relative h-60">
+            <canvas id="hourChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Risk Dağılımı Donut -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 class="text-base font-bold text-slate-900 mb-1 flex items-center">
+            <i data-lucide="pie-chart" class="w-4 h-4 mr-2 text-indigo-600"></i>Risk Seviyesi Dağılımı
+          </h3>
+          <p class="text-xs text-slate-500 mb-4">Öğrenci risk piramidi</p>
+          <div class="relative h-60">
+            <canvas id="riskPieChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= TAB 2: ERKEN UYARI VE RİSK LİSTESİ ================= -->
+    <section id="tab-risk-panel" class="tab-content hidden space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Erken Uyarı & Riskli Öğrenciler</h2>
+          <p class="text-sm text-slate-500">Zaman serisi ivmesi ve devamsızlık desenine göre riskli tespit edilenler</p>
+        </div>
+        <div class="flex flex-wrap gap-2.5">
+          <button onclick="autoSendCriticalSMS()" class="bg-rose-600 hover:bg-rose-700 text-white font-medium px-4 py-2 rounded-xl text-sm shadow-sm transition flex items-center">
+            <i data-lucide="send" class="w-4 h-4 mr-2"></i>Kritik Velilere Toplu SMS Gönder
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtreler -->
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-xs font-semibold text-slate-500 uppercase">Filtrele:</span>
+        <button onclick="filterRiskLevel('ALL')" class="risk-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white">Tümü</button>
+        <button onclick="filterRiskLevel('CRITICAL')" class="risk-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-100 text-rose-800 hover:bg-rose-200">Kritik (Acil)</button>
+        <button onclick="filterRiskLevel('HIGH')" class="risk-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 text-amber-800 hover:bg-amber-200">Yüksek Risk</button>
+        <button onclick="filterRiskLevel('MEDIUM')" class="risk-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-yellow-100 text-yellow-800 hover:bg-yellow-200">İzleme</button>
+      </div>
+
+      <!-- Risk Tablosu -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200">
+                <th class="py-3.5 px-4 font-semibold">Öğrenci</th>
+                <th class="py-3.5 px-4 font-semibold">Sınıf</th>
+                <th class="py-3.5 px-4 font-semibold">Risk Puanı</th>
+                <th class="py-3.5 px-4 font-semibold">Erken Uyarı Sebepleri</th>
+                <th class="py-3.5 px-4 font-semibold">Toplam / Son 14 Gün</th>
+                <th class="py-3.5 px-4 font-semibold text-right">Eylem</th>
+              </tr>
+            </thead>
+            <tbody id="risk-table-body" class="divide-y divide-slate-100 text-sm">
+              <tr>
+                <td colspan="6" class="text-center py-8 text-slate-400">Veriler yükleniyor...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 3: HIZLI YOKLAMA ALMA ================= -->
+    <section id="tab-take-attendance" class="tab-content hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">Ders Bazlı Hızlı Yoklama</h2>
+            <p class="text-sm text-slate-500">Sınıf ve oturumu seçip tek tıkla yoklamayı tamamlayın</p>
+          </div>
+          <button onclick="markAllPresent()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-semibold px-3.5 py-2 rounded-xl transition flex items-center">
+            <i data-lucide="check" class="w-4 h-4 mr-1"></i>Tümünü Geldi Yap
+          </button>
+        </div>
+
+        <!-- Seçiciler Formu -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sınıf</label>
+            <select id="select-class" onchange="loadClassStudents()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <!-- JS dolduracak -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Ders</label>
+            <select id="select-subject" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <!-- JS dolduracak -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tarih</label>
+            <input type="date" id="input-date" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Ders Saati</label>
+            <select id="select-hour" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="1">1. Ders</option>
+              <option value="2">2. Ders</option>
+              <option value="3">3. Ders</option>
+              <option value="4">4. Ders</option>
+              <option value="5">5. Ders</option>
+              <option value="6">6. Ders</option>
+              <option value="7">7. Ders</option>
+              <option value="8">8. Ders</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sınıf Öğrenci Listesi ve Durum Butonları -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+          <span class="text-xs font-bold text-slate-600 uppercase">Öğrenci Listesi</span>
+          <span id="student-count-badge" class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-semibold">0 Öğrenci</span>
+        </div>
+        <div class="p-4 divide-y divide-slate-100 max-h-[500px] overflow-y-auto" id="attendance-student-list">
+          <p class="text-sm text-slate-400 text-center py-6">Lütfen yukarıdan bir sınıf seçin.</p>
+        </div>
+        <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+          <button onclick="submitAttendance()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm shadow transition flex items-center">
+            <i data-lucide="save" class="w-4 h-4 mr-2"></i>Yoklamayı Kaydet & Analiz Et
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TAB 4: SMS GÜNLÜĞÜ ================= -->
+    <section id="tab-sms-logs" class="tab-content hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <h2 class="text-xl font-bold text-slate-900">Veliye İletilen SMS Bildirimleri</h2>
+        <p class="text-sm text-slate-500">Erken uyarı sistemi tarafından tetiklenen veya manuel gönderilen mesajlar</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider border-b border-slate-200">
+                <th class="py-3 px-4 font-semibold">Tarih</th>
+                <th class="py-3 px-4 font-semibold">Öğrenci</th>
+                <th class="py-3 px-4 font-semibold">Telefon</th>
+                <th class="py-3 px-4 font-semibold">Mesaj İçeriği</th>
+                <th class="py-3 px-4 font-semibold">Tetikleme Sebebi</th>
+                <th class="py-3 px-4 font-semibold">Durum</th>
+              </tr>
+            </thead>
+            <tbody id="sms-table-body" class="divide-y divide-slate-100 text-sm">
+              <tr>
+                <td colspan="6" class="text-center py-8 text-slate-400">SMS kaydı aranıyor...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal: Tek Öğrenciye SMS Gönder -->
+  <div id="sms-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-bold text-slate-900 flex items-center">
+          <i data-lucide="message-square" class="w-5 h-5 text-indigo-600 mr-2"></i>Veliye SMS Gönder
+        </h3>
+        <button onclick="closeSmsModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div>
+        <p class="text-xs text-slate-500">Öğrenci: <strong id="modal-student-name" class="text-slate-800"></strong></p>
+        <p class="text-xs text-slate-500">Veli: <strong id="modal-parent-info" class="text-slate-800"></strong></p>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Akıllı Mesaj Şablonu (Düzenlenebilir)</label>
+        <textarea id="modal-sms-text" rows="4" class="w-full text-sm bg-slate-50 border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeSmsModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">İptal</button>
+        <button onclick="sendSingleSMS()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow">SMS'i Gönder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Kodları -->
+  <script>
+    let currentTab = 'dashboard';
+    let riskDataCache = [];
+    let classesCache = [];
+    let currentModalStudentId = null;
+    let dayChartInstance = null;
+    let hourChartInstance = null;
+    let riskPieChartInstance = null;
+
+    // Başlangıç
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("input-date").value = new Date().toISOString().split('T')[0];
+      lucide.createIcons();
+      loadOverview();
+      loadHeatmaps();
+      loadClassesAndSubjects();
+    });
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-message").innerText = msg;
+      toast.classList.remove("hidden");
+      setTimeout(() => toast.classList.add("hidden"), 3500);
+    }
+
+    function switchTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow');
+        btn.classList.add('text-indigo-200');
+      });
+
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`btn-${tabId}`);
+      activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow');
+      activeBtn.classList.remove('text-indigo-200');
+
+      if (tabId === 'dashboard') {
+        loadOverview();
+        loadHeatmaps();
+      } else if (tabId === 'risk-panel') {
+        loadRiskReport();
+      } else if (tabId === 'sms-logs') {
+        loadSMSLogs();
+      }
+      lucide.createIcons();
+    }
+
+    // --- GENEL BAKIŞ VERİLERİ ---
+    async function loadOverview() {
+      try {
+        const res = await fetch('/api/analytics/overview');
+        const data = await res.json();
+
+        document.getElementById('kpi-students').innerText = data.total_students;
+        document.getElementById('kpi-classes').innerText = `${data.total_classes} Sınıf`;
+        document.getElementById('kpi-attendance-rate').innerText = `%${data.overall_attendance_rate}`;
+        document.getElementById('kpi-critical').innerText = data.critical_risk_count;
+        document.getElementById('kpi-sms').innerText = data.total_sms_sent;
+
+        renderRiskPieChart(data);
+      } catch (err) {
+        console.error("Overview error:", err);
+      }
+    }
+
+    async function loadHeatmaps() {
+      try {
+        const res = await fetch('/api/analytics/heatmaps');
+        const data = await res.json();
+
+        renderDayChart(data.day_distribution);
+        renderHourChart(data.hour_distribution);
+      } catch (err) {
+        console.error("Heatmap error:", err);
+      }
+    }
+
+    function renderDayChart(dist) {
+      const ctx = document.getElementById('dayChart').getContext('2d');
+      if (dayChartInstance) dayChartInstance.destroy();
+
+      dayChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(dist),
+          datasets: [{
+            label: 'Kaçırılan Ders Sayısı',
+            data: Object.values(dist),
+            backgroundColor: ['#6366f1', '#818cf8', '#a5b4fc', '#818cf8', '#ef4444'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+        }
+      });
+    }
+
+    function renderHourChart(dist) {
+      const ctx = document.getElementById('hourChart').getContext('2d');
+      if (hourChartInstance) hourChartInstance.destroy();
+
+      hourChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Object.keys(dist),
+          datasets: [{
+            label: 'Devamsızlık',
+            data: Object.values(dist),
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+        }
+      });
+    }
+
+    function renderRiskPieChart(data) {
+      const ctx = document.getElementById('riskPieChart').getContext('2d');
+      if (riskPieChartInstance) riskPieChartInstance.destroy();
+
+      riskPieChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Kritik', 'Yüksek', 'Orta', 'Düşük'],
+          datasets: [{
+            data: [data.critical_risk_count, data.high_risk_count, data.medium_risk_count, data.low_risk_count],
+            backgroundColor: ['#ef4444', '#f97316', '#eab308', '#10b981'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    // --- ERKEN UYARI & RİSK TABLOSU ---
+    async function loadRiskReport() {
+      try {
+        const res = await fetch('/api/analytics/risk-report');
+        riskDataCache = await res.json();
+        renderRiskTable(riskDataCache);
+      } catch (err) {
+        console.error("Risk report error:", err);
+      }
+    }
+
+    function filterRiskLevel(level) {
+      document.querySelectorAll('.risk-filter-btn').forEach(b => {
+        b.classList.remove('bg-indigo-600', 'text-white');
+        b.classList.add('bg-slate-100', 'text-slate-700');
+      });
+      event.target.classList.add('bg-indigo-600', 'text-white');
+      event.target.classList.remove('bg-slate-100', 'text-slate-700');
+
+      if (level === 'ALL') {
+        renderRiskTable(riskDataCache);
+      } else {
+        renderRiskTable(riskDataCache.filter(item => item.risk_level === level));
+      }
+    }
+
+    function renderRiskTable(data) {
+      const tbody = document.getElementById('risk-table-body');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Risk grubunda öğrenci bulunamadı.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => {
+        let badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        let barColor = 'bg-emerald-500';
+        if (item.risk_level === 'CRITICAL') {
+          badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse';
+          barColor = 'bg-rose-500';
+        } else if (item.risk_level === 'HIGH') {
+          badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+          barColor = 'bg-amber-500';
+        } else if (item.risk_level === 'MEDIUM') {
+          badgeColor = 'bg-yellow-50 text-yellow-700 border-yellow-200';
+          barColor = 'bg-yellow-500';
+        }
+
+        const factorTags = item.risk_factors.map(f => 
+          `<span class="inline-block bg-slate-100 text-slate-700 text-[11px] px-2 py-0.5 rounded-md mr-1 mb-1 font-medium">${f}</span>`
+        ).join('') || '<span class="text-xs text-slate-400">Normal devam seyri</span>';
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="py-3.5 px-4 font-semibold text-slate-900">
+              ${item.student_name}
+              <span class="block text-xs font-normal text-slate-400">No: ${item.student_number}</span>
+            </td>
+            <td class="py-3.5 px-4 text-slate-600 font-medium">${item.classroom_name}</td>
+            <td class="py-3.5 px-4">
+              <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold text-slate-800">${item.risk_score}</span>
+                <div class="w-16 bg-slate-200 rounded-full h-2 overflow-hidden">
+                  <div class="${barColor} h-2 rounded-full" style="width: ${item.risk_score}%"></div>
+                </div>
+                <span class="border text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${badgeColor}">${item.risk_level}</span>
+              </div>
+            </td>
+            <td class="py-3.5 px-4 max-w-xs">${factorTags}</td>
+            <td class="py-3.5 px-4">
+              <span class="font-bold text-slate-800">${item.absent_count} saat</span>
+              <span class="text-xs text-rose-600 block font-medium">(Son 14 gün: ${item.recent_absence_count} ders)</span>
+            </td>
+            <td class="py-3.5 px-4 text-right">
+              <button onclick="openSmsModal(${item.student_id})" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition inline-flex items-center">
+                <i data-lucide="send" class="w-3.5 h-3.5 mr-1"></i>SMS Gönder
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // --- SMS GÖNDERME MODALI ---
+    function openSmsModal(studentId) {
+      const student = riskDataCache.find(s => s.student_id === studentId);
+      if (!student) return;
+
+      currentModalStudentId = studentId;
+      document.getElementById('modal-student-name').innerText = student.student_name;
+      document.getElementById('modal-parent-info').innerText = `${student.parent_name} (${student.parent_phone})`;
+
+      // Akıllı şablon oluştur
+      let msg = `Sayın Velimiz, ${student.student_name}'in toplam devamsızlığı ${student.absent_count} ders saatine ulaşmıştır.`;
+      if (student.recent_absence_count >= 5) {
+        msg += ` Özellikle son 2 haftadaki artış dikkat çekmektedir (${student.recent_absence_count} ders).`;
+      }
+      msg += ` Öğrencimizin durumunu görüşmek üzere okulumuza bekleriz. (Devam Takip)`;
+
+      document.getElementById('modal-sms-text').value = msg;
+      document.getElementById('sms-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeSmsModal() {
+      document.getElementById('sms-modal').classList.add('hidden');
+    }
+
+    async function sendSingleSMS() {
+      if (!currentModalStudentId) return;
+      const text = document.getElementById('modal-sms-text').value;
+
+      try {
+        const res = await fetch('/api/analytics/send-alert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_id: currentModalStudentId,
+            custom_message: text
+          })
+        });
+        const resData = await res.json();
+        closeSmsModal();
+        showToast("Veliye SMS başarıyla iletildi!");
+        loadOverview();
+      } catch (err) {
+        alert("SMS gönderilirken hata oluştu: " + err);
+      }
+    }
+
+    async function autoSendCriticalSMS() {
+      if (!confirm("Tüm kritik riskli öğrencilerin velilerine otomatik akıllı SMS uyarısı gönderilsin mi?")) return;
+      try {
+        const res = await fetch('/api/analytics/auto-alert-critical', { method: 'POST' });
+        const data = await res.json();
+        showToast(data.message);
+        loadOverview();
+      } catch (err) {
+        alert("Toplu gönderim hatası: " + err);
+      }
+    }
+
+    // --- HIZLI YOKLAMA İŞLEMLERİ ---
+    async function loadClassesAndSubjects() {
+      try {
+        const [cRes, sRes] = await Promise.all([
+          fetch('/api/school/classes'),
+          fetch('/api/school/subjects')
+        ]);
+        classesCache = await cRes.json();
+        const subjects = await sRes.json();
+
+        const classSelect = document.getElementById('select-class');
+        classSelect.innerHTML = classesCache.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+        const subjSelect = document.getElementById('select-subject');
+        subjSelect.innerHTML = subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+        loadClassStudents();
+      } catch (err) {
+        console.error("Classes load error:", err);
+      }
+    }
+
+    async function loadClassStudents() {
+      const classId = document.getElementById('select-class').value;
+      if (!classId) return;
+
+      try {
+        const res = await fetch(`/api/school/students?class_id=${classId}`);
+        const students = await res.json();
+
+        document.getElementById('student-count-badge').innerText = `${students.length} Öğrenci`;
+        const listDiv = document.getElementById('attendance-student-list');
+
+        if (students.length === 0) {
+          listDiv.innerHTML = '<p class="text-sm text-slate-400 text-center py-6">Bu sınıfta kayıtlı öğrenci yok.</p>';
+          return;
+        }
+
+        listDiv.innerHTML = students.map(s => `
+          <div class="py-3 flex items-center justify-between student-attendance-row" data-id="${s.id}">
+            <div>
+              <p class="font-semibold text-slate-900 text-sm">${s.full_name}</p>
+              <span class="text-xs text-slate-400">No: ${s.student_number}</span>
+            </div>
+            <div class="flex space-x-1.5 status-buttons">
+              <button type="button" onclick="setStatus(${s.id}, 'PRESENT')" class="btn-status px-3 py-1 text-xs font-semibold rounded-lg border bg-emerald-600 text-white border-emerald-600" data-status="PRESENT">Geldi</button>
+              <button type="button" onclick="setStatus(${s.id}, 'ABSENT')" class="btn-status px-3 py-1 text-xs font-semibold rounded-lg border bg-slate-100 text-slate-600 border-slate-200 hover:bg-rose-50 hover:text-rose-700" data-status="ABSENT">Gelmedi</button>
+              <button type="button" onclick="setStatus(${s.id}, 'LATE')" class="btn-status px-3 py-1 text-xs font-semibold rounded-lg border bg-slate-100 text-slate-600 border-slate-200 hover:bg-amber-50 hover:text-amber-700" data-status="LATE">Geç</button>
+              <button type="button" onclick="setStatus(${s.id}, 'EXCUSED')" class="btn-status px-3 py-1 text-xs font-semibold rounded-lg border bg-slate-100 text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-700" data-status="EXCUSED">İzinli</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error("Student load error:", err);
+      }
+    }
+
+    function setStatus(studentId, status) {
+      const row = document.querySelector(`.student-attendance-row[data-id="${studentId}"]`);
+      if (!row) return;
+
+      row.querySelectorAll('.btn-status').forEach(btn => {
+        btn.className = "btn-status px-3 py-1 text-xs font-semibold rounded-lg border bg-slate-100 text-slate-600 border-slate-200";
+      });
+
+      const activeBtn = row.querySelector(`.btn-status[data-status="${status}"]`);
+      if (status === 'PRESENT') activeBtn.className = "btn-status px-3 py-1 text-xs font-semibold rounded-lg border bg-emerald-600 text-white border-emerald-600";
+      if (status === 'ABSENT') activeBtn.className = "btn-status px-3 py-1 text-xs font-semibold rounded-lg border bg-rose-600 text-white border-rose-600";
+      if (status === 'LATE') activeBtn.className = "btn-status px-3 py-1 text-xs font-semibold rounded-lg border bg-amber-500 text-white border-amber-500";
+      if (status === 'EXCUSED') activeBtn.className = "btn-status px-3 py-1 text-xs font-semibold rounded-lg border bg-blue-600 text-white border-blue-600";
+    }
+
+    function markAllPresent() {
+      document.querySelectorAll('.student-attendance-row').forEach(row => {
+        const sId = row.getAttribute('data-id');
+        setStatus(sId, 'PRESENT');
+      });
+      showToast("Tüm sınıf 'Geldi' olarak işaretlendi.");
+    }
+
+    async function submitAttendance() {
+      const classId = parseInt(document.getElementById('select-class').value);
+      const subjectId = parseInt(document.getElementById('select-subject').value);
+      const sessionDate = document.getElementById('input-date').value;
+      const lessonHour = parseInt(document.getElementById('select-hour').value);
+
+      const entries = [];
+      document.querySelectorAll('.student-attendance-row').forEach(row => {
+        const studentId = parseInt(row.getAttribute('data-id'));
+        let selectedStatus = 'PRESENT';
+        row.querySelectorAll('.btn-status').forEach(btn => {
+          if (btn.classList.contains('text-white')) {
+            selectedStatus = btn.getAttribute('data-status');
+          }
+        });
+        entries.push({ student_id: studentId, status: selectedStatus });
+      });
+
+      if (entries.length === 0) {
+        alert("Kaydedilecek öğrenci bulunamadı.");
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/attendance/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            class_id: classId,
+            subject_id: subjectId,
+            session_date: sessionDate,
+            lesson_hour: lessonHour,
+            entries: entries
+          })
+        });
+        const data = await res.json();
+        showToast(data.message);
+        loadOverview();
+      } catch (err) {
+        alert("Yoklama kaydedilemedi: " + err);
+      }
+    }
+
+    // --- SMS GÜNLÜĞÜ TABLOSU ---
+    async function loadSMSLogs() {
+      try {
+        const res = await fetch('/api/analytics/sms-logs');
+        const logs = await res.json();
+        const tbody = document.getElementById('sms-table-body');
+
+        if (!logs || logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Henüz gönderilen bir SMS kaydı yok.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = logs.map(l => `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-4 text-xs text-slate-500">${new Date(l.sent_at).toLocaleString('tr-TR')}</td>
+            <td class="py-3 px-4 font-semibold text-slate-800">${l.student_name}</td>
+            <td class="py-3 px-4 text-slate-600 font-mono text-xs">${l.phone}</td>
+            <td class="py-3 px-4 text-slate-700 max-w-sm text-xs leading-relaxed">${l.message}</td>
+            <td class="py-3 px-4 text-xs text-slate-500">${l.reason || '-'}</td>
+            <td class="py-3 px-4">
+              <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">${l.status}</span>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error("SMS logs error:", err);
+      }
+    }
+  </script>
+</body>
+</html>
